@@ -49,8 +49,7 @@ class KafkaGCPMessageSensor(Sensor):
         self._consumer = KafkaConsumer(*self._topics,
                                        client_id=self._client_id,
                                        group_id=self._group_id,
-                                       bootstrap_servers=self._hosts,
-                                       deserializer_class=self._try_deserialize)
+                                       bootstrap_servers=self._hosts)
         self._ensure_topics_existence()
 
     def _ensure_topics_existence(self):
@@ -61,8 +60,7 @@ class KafkaGCPMessageSensor(Sensor):
         with the default replication factor and number of partitions (default server config).
         Otherwise Kafka server is not configured to auto-create topics and partitions.
         """
-        map(self._consumer._client.ensure_topic_exists, self._topics)
-        self._consumer.set_topic_partitions(*self._topics)
+        map(self._consumer.partitions_for_topic, self._topics)
 
     def run(self):
         """

@@ -37,7 +37,8 @@ class ProduceMessageAction(Action):
         _client_id = self.config.get('client_id') or self.DEFAULT_CLIENT_ID
 
         producer = KafkaProducer(bootstrap_servers=_hosts, client_id=_client_id)
-        result = producer.send(topic, message.encode('utf_8'))
+        producer.send(topic, message.encode('utf_8'))
+        producer.flush()
+        producer.close()
+        return 0
 
-        if result[0]:
-            return result[0]._asdict()
