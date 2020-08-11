@@ -1,7 +1,7 @@
 from st2common.runners.base_action import Action
-from kafka import SimpleProducer, KafkaClient
-from kafka.util import kafka_bytestring
 
+from kafka import KafkaProducer
+from kafka.errors import KafkaError
 
 class ProduceMessageAction(Action):
     """
@@ -36,10 +36,9 @@ class ProduceMessageAction(Action):
         # set default for empty value
         _client_id = self.config.get('client_id') or self.DEFAULT_CLIENT_ID
 
-        client = KafkaClient(_hosts, client_id=_client_id)
-        client.ensure_topic_exists(topic)
-        producer = SimpleProducer(client)
-        result = producer.send_messages(topic, kafka_bytestring(message))
+        producer = KafkaProducer(bootstrap_servers=_hosts, client_id=_client_id)
+        producer.send(topic, message.encode('utf_8'))
+        producer.flush()
+        producer.close()
+        return 0
 
-        if result[0]:
-            return result[0]._asdict()

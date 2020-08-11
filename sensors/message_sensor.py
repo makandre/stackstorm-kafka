@@ -47,8 +47,7 @@ class KafkaMessageSensor(Sensor):
         self._consumer = KafkaConsumer(*self._topics,
                                        client_id=self._client_id,
                                        group_id=self._group_id,
-                                       bootstrap_servers=self._hosts,
-                                       deserializer_class=self._try_deserialize)
+                                       bootstrap_servers=self._hosts)
         self._ensure_topics_existence()
 
     def _ensure_topics_existence(self):
@@ -59,8 +58,7 @@ class KafkaMessageSensor(Sensor):
         with the default replication factor and number of partitions (default server config).
         Otherwise Kafka server is not configured to auto-create topics and partitions.
         """
-        map(self._consumer._client.ensure_topic_exists, self._topics)
-        self._consumer.set_topic_partitions(*self._topics)
+        map(self._consumer.partitions_for_topic, self._topics)
 
     def run(self):
         """
@@ -73,21 +71,17 @@ class KafkaMessageSensor(Sensor):
             self._logger.debug(
                 "[KafkaMessageSensor]: Received %s:%d:%d: key=%s message=%s" %
                 (message.topic, message.partition,
-                 message.offset, message.key, message.value)
+                 message.offset, message.key, message.value.decode("utf-8"))
             )
             topic = message.topic
-            if sys.version_info.major >= 3:
-                topic = topic.decode('utf-8')
             payload = {
                 'topic': topic,
                 'partition': message.partition,
                 'offset': message.offset,
                 'key': message.key,
-                'message': message.value,
+                'message': message.value.decode("utf-8"),
             }
             self._sensor_service.dispatch(trigger=self.TRIGGER, payload=payload)
-            # Mark this message as fully consumed
-            self._consumer.task_done(message)
             self._consumer.commit()
 
     def cleanup(self):
