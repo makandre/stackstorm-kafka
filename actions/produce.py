@@ -36,9 +36,14 @@ class ProduceMessageAction(Action):
         # set default for empty value
         _client_id = self.config.get('client_id') or self.DEFAULT_CLIENT_ID
 
-        producer = KafkaProducer(bootstrap_servers=_hosts, client_id=_client_id)
+        if self.config.get('tls_enable', False):
+            producer = KafkaProducer(bootstrap_servers=_hosts, client_id=_client_id, ssl_cafile=self.config.get('tls_ca_certificate', None),
+                                     ssl_certfile=self.config.get('tls_client_certificate', None),
+                                     ssl_keyfile=self.config.get('tls_client_key', None))
+        else:
+            producer = KafkaProducer(bootstrap_servers=_hosts, client_id=_client_id)
+
         producer.send(topic, message.encode('utf_8'))
         producer.flush()
         producer.close()
         return 0
-

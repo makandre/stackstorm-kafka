@@ -46,11 +46,21 @@ class KafkaGCPMessageSensor(Sensor):
         Create connection and initialize Kafka Consumer.
         """
         self._logger.debug('[KafkaGCPMessageSensor]: Initializing consumer ...')
-        self._consumer = KafkaConsumer(*self._topics,
-                                       client_id=self._client_id,
-                                       group_id=self._group_id,
-                                       bootstrap_servers=self._hosts,
-                                       value_deserializer=lambda m: json.loads(m.decode('utf-8')))
+        if self.config.get('tls_enable', False):
+            self._consumer = KafkaConsumer(*self._topics,
+                                           client_id=self._client_id,
+                                           group_id=self._group_id,
+                                           bootstrap_servers=self._hosts,
+                                           value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+                                           ssl_cafile=self.config.get('tls_ca_certificate', None),
+                                           ssl_certfile=self.config.get('tls_client_certificate', None),
+                                           ssl_keyfile=self.config.get('tls_client_key', None))
+        else:
+            self._consumer = KafkaConsumer(*self._topics,
+                                           client_id=self._client_id,
+                                           group_id=self._group_id,
+                                           bootstrap_servers=self._hosts,
+                                           value_deserializer=lambda m: json.loads(m.decode('utf-8')))
         self._ensure_topics_existence()
 
     def _ensure_topics_existence(self):
