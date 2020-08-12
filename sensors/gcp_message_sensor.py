@@ -49,7 +49,8 @@ class KafkaGCPMessageSensor(Sensor):
         self._consumer = KafkaConsumer(*self._topics,
                                        client_id=self._client_id,
                                        group_id=self._group_id,
-                                       bootstrap_servers=self._hosts)
+                                       bootstrap_servers=self._hosts,
+                                       value_deserializer=lambda m: json.loads(m.decode('utf-8')))
         self._ensure_topics_existence()
 
     def _ensure_topics_existence(self):

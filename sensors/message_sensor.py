@@ -47,7 +47,8 @@ class KafkaMessageSensor(Sensor):
         self._consumer = KafkaConsumer(*self._topics,
                                        client_id=self._client_id,
                                        group_id=self._group_id,
-                                       bootstrap_servers=self._hosts)
+                                       bootstrap_servers=self._hosts,
+                                       value_deserializer=lambda m: json.loads(m.decode('utf-8')))
         self._ensure_topics_existence()
 
     def _ensure_topics_existence(self):
@@ -71,7 +72,7 @@ class KafkaMessageSensor(Sensor):
             self._logger.debug(
                 "[KafkaMessageSensor]: Received %s:%d:%d: key=%s message=%s" %
                 (message.topic, message.partition,
-                 message.offset, message.key, message.value.decode("utf-8"))
+                 message.offset, message.key, message.value)
             )
             topic = message.topic
             payload = {
@@ -79,7 +80,7 @@ class KafkaMessageSensor(Sensor):
                 'partition': message.partition,
                 'offset': message.offset,
                 'key': message.key,
-                'message': message.value.decode("utf-8"),
+                'message': message.value,
             }
             self._sensor_service.dispatch(trigger=self.TRIGGER, payload=payload)
             self._consumer.commit()
