@@ -15,17 +15,17 @@
     default: False
     required: false
   tls_ca_certificate:
-    description: "CA certificate for TLS communication"
+    description: "CA certificate for TLS communication (base64 encoded without line wrap)"
     type: "string"
     required: false
     secret: true
   tls_client_certificate:
-    description: "Client certificate for TLS communication"
+    description: "Client certificate for TLS communication (base64 encoded without line wrap)"
     type: "string"
     required: false
     secret: true
   tls_client_key:
-    description: "Client private key for TLS communication"
+    description: "Client private key for TLS communication (base64 encoded without line wrap)"
     type: "string"
     required: false
     secret: true

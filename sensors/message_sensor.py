@@ -1,5 +1,6 @@
 import sys
 import json
+import base64
 from st2reactor.sensor.base import Sensor
 from kafka import KafkaConsumer
 
@@ -50,9 +51,10 @@ class KafkaMessageSensor(Sensor):
                                            group_id=self._group_id,
                                            bootstrap_servers=self._hosts,
                                            value_deserializer=lambda m: json.loads(m.decode('utf-8')),
-                                           ssl_cafile=self.config.get('tls_ca_certificate', None),
-                                           ssl_certfile=self.config.get('tls_client_certificate', None),
-                                           ssl_keyfile=self.config.get('tls_client_key', None))
+                                           security_protocol='SSL',
+                                           ssl_cafile=self.file_parameter(self.config.get('tls_ca_certificate', None), '/var/tls_ca_certificate'),
+                                           ssl_certfile=self.file_parameter(self.config.get('tls_client_certificate', None), '/var/tls_client_certificate'),
+                                           ssl_keyfile=self.file_parameter(self.config.get('tls_client_key', None),'/var/tls_client_key'))
         else:
             self._consumer = KafkaConsumer(*self._topics,
                                            client_id=self._client_id,
@@ -128,3 +130,22 @@ class KafkaMessageSensor(Sensor):
             pass
 
         return body
+
+    def file_parameter(self, contents, file_name):
+        """
+        Create a file with the base64 encoded parameter contents and return the file name
+
+        :param contents: base64 encoded file contents
+        :type contents: ``str``
+        :param file_name: file name
+        :type fulename: ``str``
+
+        :return: file name
+        :rtype: ``str``
+        """
+        if contents == None:
+            return None
+        file = open(file_name, 'w')
+        file.write(base64.b64decode(contents).decode('utf-8'))
+        file.close()
+        return file_name
