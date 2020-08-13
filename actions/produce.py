@@ -40,9 +40,9 @@ class ProduceMessageAction(Action):
         if self.config.get('tls_enable', False):
             producer = KafkaProducer(bootstrap_servers=_hosts, client_id=_client_id,
                                      security_protocol='SSL',
-                                     ssl_cafile=self.file_parameter(self.config.get('tls_ca_certificate', None), '/var/tls_ca_certificate'),
-                                     ssl_certfile=self.file_parameter(self.config.get('tls_client_certificate', None), '/var/tls_client_certificate'),
-                                     ssl_keyfile=self.file_parameter(self.config.get('tls_client_key', None),'/var/tls_client_key'))
+                                     ssl_cafile=create_file_base64(self.config.get('tls_ca_certificate', None), '/var/tls_ca_certificate'),
+                                     ssl_certfile=create_file_base64(self.config.get('tls_client_certificate', None), '/var/tls_client_certificate'),
+                                     ssl_keyfile=create_file_base64(self.config.get('tls_client_key', None),'/var/tls_client_key'))
         else:
             producer = KafkaProducer(bootstrap_servers=_hosts, client_id=_client_id)
 
@@ -51,22 +51,22 @@ class ProduceMessageAction(Action):
         producer.close()
         return 0
     
-    def file_parameter(self, contents, file_name):
-        """
-        Create a file with the base64 encoded parameter contents and return the file name
+def create_file_base64(contents, file_name):
+    """
+    Create a file with the base64 encoded parameter contents and return the file name
 
-        :param contents: base64 encoded file contents
-        :type contents: ``str``
-        :param file_name: file name
-        :type fulename: ``str``
+    :param contents: base64 encoded file contents
+    :type contents: ``str``
+    :param file_name: file name
+    :type fulename: ``str``
 
-        :return: file name
-        :rtype: ``str``
-        """
-        if contents == None:
-            return None
-        file = open(file_name, 'w')
-        file.write(base64.b64decode(contents).decode('utf-8'))
-        file.close()
-        return file_name
+    :return: file name
+    :rtype: ``str``
+    """
+    if contents == None:
+        return None
+    file = open(file_name, 'w')
+    file.write(base64.b64decode(contents).decode('utf-8'))
+    file.close()
+    return file_name
 
